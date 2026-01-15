@@ -26,19 +26,56 @@ docker-compose down -v
 
 ## Servisler
 
-- **PostgreSQL**: Port 5432 (pgvector extension ile)
+- **PostgreSQL**: Port 5433 (pgvector extension ile)
 - **Redis**: Port 6379
 
 ## Bağlantı Bilgileri
 
 PostgreSQL connection string:
 ```
-postgresql://postgres:postgres@localhost:5432/ai_orchestrator
+postgresql://postgres:postgres@localhost:5433/ai_orchestrator
 ```
 
 Redis connection:
 ```
 localhost:6379
+```
+
+## Kullanım
+
+### Servisleri Başlatma
+
+```bash
+cd infra
+docker-compose up -d
+```
+
+### Servisleri Durdurma
+
+```bash
+cd infra
+docker-compose down
+```
+
+### Verileri Silerek Durdurma
+
+```bash
+cd infra
+docker-compose down -v
+```
+
+### Logları Görüntüleme
+
+```bash
+cd infra
+docker-compose logs -f
+```
+
+### Servis Durumunu Kontrol Etme
+
+```bash
+cd infra
+docker-compose ps
 ```
 
 ## pgvector Extension
