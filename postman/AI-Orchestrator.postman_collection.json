@@ -1,0 +1,801 @@
+{
+  "info": {
+    "_postman_id": "ai-orchestrator-collection",
+    "name": "AI Orchestrator API",
+    "description": "Complete API collection for AI Orchestrator",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('user_id', pm.response.json().id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', jsonData.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Create API Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('api_key', jsonData.key);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Postman API Key\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/api-keys",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "api-keys"]
+            }
+          }
+        },
+        {
+          "name": "List API Keys",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/api-keys",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "api-keys"]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["users", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OpenAI Compatible",
+      "item": [
+        {
+          "name": "Chat Completion (Non-Streaming)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"model\": \"llama3\",\n    \"messages\": [\n        {\n            \"role\": \"user\",\n            \"content\": \"Hello, how are you?\"\n        }\n    ],\n    \"temperature\": 0.7,\n    \"max_tokens\": 100,\n    \"stream\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/chat/completions",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "chat", "completions"]
+            }
+          }
+        },
+        {
+          "name": "Chat Completion (Streaming)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"model\": \"llama3\",\n    \"messages\": [\n        {\n            \"role\": \"user\",\n            \"content\": \"Tell me a short story\"\n        }\n    ],\n    \"temperature\": 0.7,\n    \"max_tokens\": 200,\n    \"stream\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/chat/completions",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "chat", "completions"]
+            }
+          }
+        },
+        {
+          "name": "Get Chat Completion Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/chat/completions/:jobId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "chat", "completions", ":jobId"],
+              "variable": [
+                {
+                  "key": "jobId",
+                  "value": "chatcmpl-12345678-1234-1234-1234-123456789012"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Image Generation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"prompt\": \"A beautiful sunset over mountains\",\n    \"model\": \"sdxl\",\n    \"size\": \"1024x1024\",\n    \"n\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/images/generations",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "images", "generations"]
+            }
+          }
+        },
+        {
+          "name": "Image Generation (Custom Workflow)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"prompt\": \"A beautiful sunset over mountains\",\n    \"workflow\": {\n        \"1\": {\n            \"inputs\": {\n                \"ckpt_name\": \"sd_xl_base_1.0.safetensors\"\n            },\n            \"class_type\": \"CheckpointLoaderSimple\"\n        },\n        \"2\": {\n            \"inputs\": {\n                \"width\": 1024,\n                \"height\": 1024,\n                \"batch_size\": 1\n            },\n            \"class_type\": \"EmptyLatentImage\"\n        },\n        \"3\": {\n            \"inputs\": {\n                \"text\": \"A beautiful sunset over mountains\",\n                \"clip\": [\"1\", 1]\n            },\n            \"class_type\": \"CLIPTextEncode\"\n        },\n        \"4\": {\n            \"inputs\": {\n                \"text\": \"blurry, low quality, distorted\",\n                \"clip\": [\"1\", 1]\n            },\n            \"class_type\": \"CLIPTextEncode\"\n        },\n        \"5\": {\n            \"inputs\": {\n                \"seed\": 12345,\n                \"steps\": 20,\n                \"cfg\": 7,\n                \"sampler_name\": \"euler\",\n                \"scheduler\": \"normal\",\n                \"denoise\": 1,\n                \"model\": [\"1\", 0],\n                \"positive\": [\"3\", 0],\n                \"negative\": [\"4\", 0],\n                \"latent_image\": [\"2\", 0]\n            },\n            \"class_type\": \"KSampler\"\n        },\n        \"6\": {\n            \"inputs\": {\n                \"samples\": [\"5\", 0],\n                \"vae\": [\"1\", 2]\n            },\n            \"class_type\": \"VAEDecode\"\n        },\n        \"7\": {\n            \"inputs\": {\n                \"filename_prefix\": \"ComfyUI\",\n                \"images\": [\"6\", 0]\n            },\n            \"class_type\": \"SaveImage\"\n        }\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/images/generations",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "images", "generations"]
+            }
+          }
+        },
+        {
+          "name": "Get Image Generation Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/images/generations/:jobId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "images", "generations", ":jobId"],
+              "variable": [
+                {
+                  "key": "jobId",
+                  "value": "12345678-1234-1234-1234-123456789012"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "List Tasks",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["tasks"]
+            }
+          }
+        },
+        {
+          "name": "Get Task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tasks/:id",
+              "host": ["{{base_url}}"],
+              "path": ["tasks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "STUDENT_WEEKLY_ANALYSIS"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Task (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id\": \"STUDENT_WEEKLY_ANALYSIS\",\n    \"name\": \"Student Weekly Analysis\",\n    \"description\": \"Analyze student performance weekly\",\n    \"allowedModels\": [\"llama3\", \"gpt-4o\"],\n    \"maxCost\": 0.02,\n    \"requiresRAG\": true,\n    \"tools\": [\"db\", \"pdf\"],\n    \"maxTokens\": 2000,\n    \"minTemperature\": 0.0,\n    \"maxTemperature\": 1.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["tasks"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Context / RAG",
+      "item": [
+        {
+          "name": "Create Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"This is a sample document about AI and machine learning. It contains important information about neural networks and deep learning.\",\n    \"taskId\": \"STUDENT_WEEKLY_ANALYSIS\",\n    \"metadata\": {\n        \"source\": \"textbook\",\n        \"chapter\": 1\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/context/documents",
+              "host": ["{{base_url}}"],
+              "path": ["context", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Search Context",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"What is deep learning?\",\n    \"taskId\": \"STUDENT_WEEKLY_ANALYSIS\",\n    \"limit\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/context/search",
+              "host": ["{{base_url}}"],
+              "path": ["context", "search"]
+            }
+          }
+        },
+        {
+          "name": "Get Documents by Task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_key}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/context/documents/task/:taskId",
+              "host": ["{{base_url}}"],
+              "path": ["context", "documents", "task", ":taskId"],
+              "variable": [
+                {
+                  "key": "taskId",
+                  "value": "STUDENT_WEEKLY_ANALYSIS"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get User Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/stats",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Request Logs (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/analytics/logs?limit=100&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "analytics", "logs"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List Users (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create Model Config (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"modelName\": \"llama3\",\n    \"provider\": \"ollama\",\n    \"maxTokens\": 2000,\n    \"minTemperature\": 0.0,\n    \"maxTemperature\": 2.0,\n    \"estimatedVRAM\": 10.0,\n    \"defaultParams\": {\n        \"top_p\": 0.9\n    },\n    \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/config/models",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "config", "models"]
+            }
+          }
+        },
+        {
+          "name": "List Model Configs (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/config/models",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "config", "models"]
+            }
+          }
+        },
+        {
+          "name": "Get All GPU Resources (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/gpu/resources",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "gpu", "resources"]
+            }
+          }
+        },
+        {
+          "name": "Get GPU Resource by ID (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/gpu/resources/:gpuId",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "gpu", "resources", ":gpuId"],
+              "variable": [
+                {
+                  "key": "gpuId",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Provider Availability (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/gpu/providers/:provider/availability",
+              "host": ["{{base_url}}"],
+              "path": [
+                "admin",
+                "gpu",
+                "providers",
+                ":provider",
+                "availability"
+              ],
+              "variable": [
+                {
+                  "key": "provider",
+                  "value": "ollama"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get GPU Discovery Info (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/gpu/discovery",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "gpu", "discovery"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

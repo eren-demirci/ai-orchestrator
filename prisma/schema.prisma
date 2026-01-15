@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  password    String // Hashed
+  role        UserRole     @default(USER)
+  apiKeys     ApiKey[]
+  requestLogs RequestLog[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  USER
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key        String    @unique
+  name       String?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+}
+
+model ModelConfig {
+  id             String   @id @default(uuid())
+  modelName      String   @unique
+  provider       String // "ollama", "comfyui"
+  maxTokens      Int?
+  minTemperature Float?
+  maxTemperature Float?
+  estimatedVRAM  Float? // GB cinsinden tahmini VRAM gereksinimi
+  defaultParams  Json?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Task {
+  id             String   @id
+  name           String
+  description    String?
+  allowedModels  String[] // Array of model names
+  maxCost        Float?
+  requiresRAG    Boolean  @default(false)
+  tools          String[] // ["db", "pdf", "web"]
+  maxTokens      Int?
+  minTemperature Float?
+  maxTemperature Float?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Document {
+  id        String                      @id @default(uuid())
+  content   String                      @db.Text
+  embedding Unsupported("vector(768)")? // pgvector - nomic-embed-text produces 768 dimensions
+  metadata  Json?
+  taskId    String?
+  createdAt DateTime                    @default(now())
+
+  // Note: pgvector index will be created via migration SQL
+}
+
+model RequestLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId       String? // Hangi task
+  endpoint     String
+  method       String
+  requestBody  Json?
+  responseBody Json?
+  statusCode   Int
+  tokenUsage   Int? // Token sayısı (LLM için)
+  duration     Int // Milisaniye cinsinden
+  gpuId        Int? // Hangi GPU kullanıldı
+  vramUsed     Float? // GB cinsinden VRAM kullanımı
+  model        String? // Hangi model kullanıldı
+  provider     String? // "ollama" | "comfyui"
+  cost         Float? // İşlem maliyeti (external provider için)
+  createdAt    DateTime @default(now())
+}
