@@ -4,6 +4,31 @@ Bu klasör Docker Compose ile PostgreSQL ve Redis servislerini içerir.
 
 ## Kurulum
 
+### Ön Gereksinimler
+
+1. **Docker ve Docker Compose yüklü olmalı:**
+```bash
+docker --version
+docker-compose --version
+```
+
+2. **Docker Permission Sorunu Çözme:**
+Eğer "permission denied" hatası alıyorsanız, kullanıcınızı `docker` grubuna ekleyin:
+```bash
+sudo usermod -aG docker $USER
+# Sonra oturumu kapatıp tekrar açın veya:
+newgrp docker
+```
+
+3. **Docker servisinin çalıştığından emin olun:**
+```bash
+sudo systemctl status docker
+# Eğer çalışmıyorsa:
+sudo systemctl start docker
+```
+
+### Servisleri Başlatma
+
 1. `.env` dosyasını oluşturun (`.env.example`'dan kopyalayın):
 ```bash
 cp .env.example .env
@@ -11,6 +36,7 @@ cp .env.example .env
 
 2. Servisleri başlatın:
 ```bash
+cd infra
 docker-compose up -d
 ```
 
