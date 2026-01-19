@@ -384,14 +384,36 @@ export class GpuResourceManagerService implements OnModuleInit {
           request.provider,
         );
         if (!isRunning) {
-          console.log(`Starting ${request.provider} service`);
+          this.logger.log(`Starting ${request.provider} service`);
           await this.providerControl.startProvider(request.provider);
+
+          // Wait for service to be ready (systemctl + API check)
+          this.logger.log(
+            `Waiting for ${request.provider} service to be ready...`,
+          );
+          await this.providerControl.waitForProviderReady(request.provider);
+          this.logger.log(`${request.provider} service is ready`);
+        } else {
+          // Service is already running, but verify API health
+          this.logger.debug(
+            `Service ${request.provider} is already running, verifying API health...`,
+          );
+          await this.providerControl.waitForProviderReady(
+            request.provider,
+            10000, // 10 seconds max for health check
+            true, // Skip systemctl check since service is already running
+          );
+          this.logger.debug(`${request.provider} API is healthy`);
         }
       } catch (error) {
-        console.warn(
-          `Failed to start ${request.provider} service: ${error instanceof Error ? error.message : String(error)}`,
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Failed to start or verify ${request.provider} service: ${errorMessage}`,
         );
-        // Continue anyway - service might already be running or might start later
+        throw new BadRequestException(
+          `Failed to start or verify ${request.provider} service: ${errorMessage}`,
+        );
       }
 
       // Find suitable GPU

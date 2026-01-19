@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client } from 'ssh2';
+import axios from 'axios';
 
 @Injectable()
 export class ProviderControlService implements OnModuleInit {
@@ -15,6 +16,8 @@ export class ProviderControlService implements OnModuleInit {
 
   private ollamaServiceName: string;
   private comfyuiServiceName: string;
+  private ollamaBaseURL: string;
+  private comfyuiBaseURL: string;
 
   constructor(private configService: ConfigService) {}
 
@@ -34,6 +37,14 @@ export class ProviderControlService implements OnModuleInit {
       this.configService.get<string>('OLLAMA_SERVICE_NAME') || 'ollama';
     this.comfyuiServiceName =
       this.configService.get<string>('COMFYUI_SERVICE_NAME') || 'comfyui';
+
+    // Load base URLs from config
+    this.ollamaBaseURL =
+      this.configService.get<string>('OLLAMA_BASE_URL') ||
+      'http://localhost:11434';
+    this.comfyuiBaseURL =
+      this.configService.get<string>('COMFYUI_BASE_URL') ||
+      'http://localhost:8188';
   }
 
   /**
@@ -142,6 +153,105 @@ export class ProviderControlService implements OnModuleInit {
         status: `Error: ${errorMessage}`,
       };
     }
+  }
+
+  /**
+   * Wait for provider service to be ready (systemctl + API health check)
+   */
+  async waitForProviderReady(
+    provider: 'ollama' | 'comfyui',
+    maxWaitTime: number = 60000, // 60 seconds default
+    skipSystemctlCheck: boolean = false,
+  ): Promise<void> {
+    const serviceName =
+      provider === 'ollama' ? this.ollamaServiceName : this.comfyuiServiceName;
+    const startTime = Date.now();
+    const systemctlCheckInterval = 1000; // 1 second
+    const apiCheckInterval = 2000; // 2 seconds
+    const systemctlMaxWait = 30000; // 30 seconds for systemctl check
+
+    // Aşama 1: systemctl is-active kontrolü
+    if (!skipSystemctlCheck) {
+      this.logger.log(
+        `Waiting for ${provider} service (${serviceName}) to become active via systemctl...`,
+      );
+      let systemctlReady = false;
+      const systemctlStartTime = Date.now();
+
+      while (!systemctlReady && Date.now() - systemctlStartTime < systemctlMaxWait) {
+        try {
+          const result = await this.executeSSHCommand(
+            `systemctl is-active ${serviceName}`,
+          );
+          if (result.trim() === 'active') {
+            systemctlReady = true;
+            this.logger.log(
+              `${provider} service (${serviceName}) is now active`,
+            );
+            break;
+          }
+        } catch (error) {
+          // Service not active yet, continue waiting
+        }
+
+        if (!systemctlReady) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, systemctlCheckInterval),
+          );
+        }
+      }
+
+      if (!systemctlReady) {
+        throw new Error(
+          `Timeout waiting for ${provider} service (${serviceName}) to become active via systemctl after ${systemctlMaxWait}ms`,
+        );
+      }
+    }
+
+    // Aşama 2: API health check
+    this.logger.log(`Checking ${provider} API health...`);
+    const baseURL =
+      provider === 'ollama' ? this.ollamaBaseURL : this.comfyuiBaseURL;
+    const healthCheckEndpoint =
+      provider === 'ollama' ? '/api/tags' : '/object_info';
+
+    let apiReady = false;
+    let attempts = 0;
+
+    while (!apiReady && Date.now() - startTime < maxWaitTime) {
+      try {
+        const response = await axios.get(`${baseURL}${healthCheckEndpoint}`, {
+          timeout: 5000, // 5 seconds timeout per request
+        });
+
+        if (response.status === 200) {
+          apiReady = true;
+          this.logger.log(`${provider} API is ready and responding`);
+          break;
+        }
+      } catch (error) {
+        attempts++;
+        const elapsed = Date.now() - startTime;
+        this.logger.debug(
+          `${provider} API health check failed (attempt ${attempts}, elapsed: ${elapsed}ms), retrying...`,
+        );
+      }
+
+      if (!apiReady) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, apiCheckInterval),
+        );
+      }
+    }
+
+    if (!apiReady) {
+      const elapsed = Date.now() - startTime;
+      throw new Error(
+        `Timeout waiting for ${provider} API to become ready after ${elapsed}ms. Service may be running but API is not responding.`,
+      );
+    }
+
+    this.logger.log(`${provider} service is fully ready`);
   }
 
   /**

@@ -218,4 +218,18 @@ export class OllamaService {
       return false;
     }
   }
+
+  /**
+   * Check if Ollama API is healthy and ready
+   */
+  async checkHealth(): Promise<boolean> {
+    try {
+      const response = await this.client.get<OllamaTagsResponse>('/api/tags', {
+        timeout: 5000, // 5 seconds timeout for health check
+      });
+      return response.status === 200;
+    } catch (error) {
+      return false;
+    }
+  }
 }

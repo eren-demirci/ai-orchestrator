@@ -270,4 +270,21 @@ export class ComfyUIService {
       );
     }
   }
+
+  /**
+   * Check if ComfyUI API is healthy and ready
+   */
+  async checkHealth(): Promise<boolean> {
+    try {
+      const response = await this.client.get<Record<string, any>>(
+        '/object_info',
+        {
+          timeout: 5000, // 5 seconds timeout for health check
+        },
+      );
+      return response.status === 200;
+    } catch (error) {
+      return false;
+    }
+  }
 }
