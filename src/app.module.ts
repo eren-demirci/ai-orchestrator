@@ -15,12 +15,14 @@ import { ComfyUIModule } from './providers/comfyui/comfyui.module';
 import { OpenAIModule } from './openai/openai.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AdminModule } from './admin/admin.module';
+import { validateEnv } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate: validateEnv,
     }),
     PrismaModule,
     UsersModule,

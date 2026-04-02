@@ -39,13 +39,10 @@ export class ImgproxyService {
     this.baseUrl =
       this.configService.get<string>('IMGPROXY_URL') ||
       this.configService.get<string>('IMGPROXY_ENDPOINT') ||
-      'http://192.168.1.50:8080';
+      'http://localhost:8080';
 
     const keyHex = this.configService.get<string>('IMGPROXY_KEY');
     const saltHex = this.configService.get<string>('IMGPROXY_SALT');
-
-    console.log('keyHex', keyHex);
-    console.log('saltHex', saltHex);
 
     this.key = keyHex ? Buffer.from(keyHex, 'hex') : null;
     this.salt = saltHex ? Buffer.from(saltHex, 'hex') : null;
@@ -63,9 +60,6 @@ export class ImgproxyService {
     const useEncryptionConfig = this.configService.get<string>(
       'IMGPROXY_USE_ENCRYPTION',
     );
-
-    console.log('useEncryptionConfig', useEncryptionConfig);
-    console.log('encryptionKey', this.encryptionKey);
 
     this.useEncryption = useEncryptionConfig === 'true' && !!this.encryptionKey;
 

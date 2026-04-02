@@ -29,9 +29,9 @@ sudo systemctl start docker
 
 ### Servisleri Başlatma
 
-1. `.env` dosyasını oluşturun (`.env.example`'dan kopyalayın):
+1. Proje kök dizininde `.env` dosyasını oluşturun (`.env.example` dosyasından):
 ```bash
-cp .env.example .env
+cp ../.env.example ../.env
 ```
 
 2. Servisleri başlatın:
