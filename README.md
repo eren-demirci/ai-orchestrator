@@ -166,6 +166,18 @@ npm run format
 npm run test
 ```
 
+## Release
+
+Semantic versioning and tag-based GitHub release flow are documented in [RELEASE.md](RELEASE.md).
+
+Quick commands:
+
+```bash
+npm run release:patch
+# or release:minor / release:major
+git push origin main --follow-tags
+```
+
 ## Production Notes
 
 - Never commit secrets or private infrastructure details.

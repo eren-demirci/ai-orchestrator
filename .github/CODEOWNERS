@@ -1,0 +1,9 @@
+# Default owners
+* @eren-demirci
+
+# Security and platform critical areas
+/src/auth/ @eren-demirci
+/src/prisma/ @eren-demirci
+/prisma/ @eren-demirci
+/infra/ @eren-demirci
+/.github/workflows/ @eren-demirci
